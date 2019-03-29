@@ -1,0 +1,126 @@
+if $::osfamily == 'RedHat' {
+        class { 'apache': }
+        class { '::php':
+         ensure        => latest,
+         manage_repos  => true,
+         fpm           => true,
+         dev           => true,
+         composer      => true,
+         pear          => true,
+         phpunit       => true,
+
+}
+class { '::mysql::server':
+    root_password            => 'zippyops',
+    remove_default_accounts  => true,
+    override_options         => $override_options
+}
+mysql::db { 'wordpress':
+      user            => 'wordpress',
+      password        => 'password',
+      host            => '192.168.1.30',
+      grant           => ['SELECT', 'UPDATE', 'ALL' ],
+}
+include '::mysql::server'
+class { 'wordpress':
+     wp_owner            => 'apache',
+     wp_group            => 'apache',
+     db_user             => 'zippyops',
+     db_password         => 'zippyops',
+     wp_site_domain      => 'centnode.zippyops.com',
+     wp_lang             => 'it',
+     create_db           => false,
+     db_host             => '192.168.1.30',
+     create_db_user      => false,
+     install_dir         => '/var/www/html/wordpress',
+     install_url         => 'https://wordpress.org/',
+}
+file { "/var/www/html/index.php":
+        mode => "0644",
+        owner => 'zippyops',
+        group => 'zippyops',
+       source => 'puppet:///modules/unzip/index.php',
+
+}
+}
+
+if $::osfamily == 'Debian' {
+      class { 'apache': }
+      class { '::php':
+         ensure            => latest,
+         manage_repos      => true,
+         fpm               => true,
+         dev               => true,
+         composer          => true,
+         pear              => true,
+         phpunit           => true,
+}
+class { '::mysql::server':
+     root_password           => 'zippyops',
+     remove_default_accounts => true,
+     override_options        => $override_options
+}
+mysql::db { 'wordpress':
+   user                  => 'zippyops',
+   password              => 'zippyops',
+   host                  => '192.168.1.33',
+   grant                 => ['SELECT', 'UPDATE', 'ALL' ],
+}
+include '::mysql::server'
+class { 'wordpress':
+     wp_owner            => 'apache',
+     wp_group            => 'apache',
+     db_user             => 'zippyops',
+     db_password         => 'zippyops',
+     wp_site_domain      => 'centos.zippyops.com',
+     wp_lang             => 'it',
+     create_db           => false,
+     db_host             => '192.168.1.31',
+     create_db_user      => false,
+     install_dir         => '/var/www/html',
+     install_url         => 'https://wordpress.org/',
+}
+file { "/var/www/html/index.php":
+        mode => "0644",
+        owner => 'zippyops',
+        group => 'zippyops',
+       source => 'puppet:///modules/unzip/index.php',
+
+}
+
+}
+if $::osfamily == 'Windows' {
+
+ include chocolatey
+  package { 'bitnami-xampp':
+        ensure   => installed,
+        provider => chocolatey,
+}
+exec { 'test1':
+  command => 'C:\xampp\xampp-control.exe',
+}
+exec { 'test2':
+  command => 'C:\xampp\apache\bin\httpd.exe',
+}
+exec { 'test3':
+  command => 'C:\xampp\mysql\bin\mysqld.exe',
+}
+exec { 'test4':
+  command => 'C:\xampp\mysql\bin\mysqladmin.exe',
+}
+download_file { "Download wordpress":
+  url                   => 'https://wordpress.org/latest.zip',
+  destination_directory => 'c:\xampp\htdocs'
+}
+unzip { "directory":
+ source => 'C:\xampp\htdocs\latest.zip',
+ creates => 'C:\xampp\htdocs\latest',
+}
+file { "C:\xampp\htdocs\wordpress\index.php":
+        mode => "0644",
+        owner => 'zippyops',
+        group => 'zippyops',
+       source => 'puppet:///modules/unzip/index.php',
+
+}
+}
